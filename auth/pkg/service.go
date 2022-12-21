@@ -1,7 +1,7 @@
 package pkg
 
 type Auth interface {
-	GetAuthenticated() string
+	GetAuthenticated(user string) string
 }
 
 type auth struct{}
@@ -10,6 +10,6 @@ func NewAuth() Auth {
 	return &auth{}
 }
 
-func (a *auth) GetAuthenticated() string {
-	return "john doe"
+func (a *auth) GetAuthenticated(user string) string {
+	return user
 }

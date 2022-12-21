@@ -7,8 +7,10 @@ import (
 	"net/url"
 	"strings"
 
+	kitjwt "github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type ServiceMiddleware func(Greeter) Greeter
@@ -43,12 +45,22 @@ func getAuthenticatedUser(addr string) endpoint.Endpoint {
 
 	url.Path += "/peek"
 
-	return kithttp.NewClient(
+	return JWTMiddleware()(kithttp.NewClient(
 		"GET",
 		url,
 		kithttp.EncodeJSONRequest,
 		getAuthName,
-	).Endpoint()
+		kithttp.ClientBefore(kitjwt.ContextToHTTP()),
+	).Endpoint())
+}
+
+func JWTMiddleware() endpoint.Middleware {
+	return kitjwt.NewSigner(
+		"greeter",
+		[]byte("your-256-bit-secret"),
+		jwt.SigningMethodHS256,
+		jwt.StandardClaims{Subject: "foobar"},
+	)
 }
 
 // Parses response from auth service
