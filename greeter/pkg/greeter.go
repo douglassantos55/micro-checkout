@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import "fmt"
 
@@ -7,6 +7,10 @@ type Greeter interface {
 }
 
 type greeter struct{}
+
+func NewGreeter() *greeter {
+	return &greeter{}
+}
 
 func (g *greeter) Greet(name string) map[string]string {
 	return map[string]string{
