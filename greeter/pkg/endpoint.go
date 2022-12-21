@@ -11,7 +11,3 @@ func MakeGreetEndpoint(greeter Greeter) endpoint.Endpoint {
 		return greeter.Greet(name.(string)), nil
 	}
 }
-
-type GreetParams struct {
-	Name string `json:"name"`
-}
