@@ -8,7 +8,7 @@ type Greeter interface {
 
 type greeter struct{}
 
-func NewGreeter() *greeter {
+func NewGreeter() Greeter {
 	return &greeter{}
 }
 

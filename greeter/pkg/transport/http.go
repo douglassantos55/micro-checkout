@@ -8,9 +8,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 )
 
-func NewHttpServer() http.Handler {
-	svc := pkg.NewGreeter()
-
+func NewHttpServer(svc pkg.Greeter) http.Handler {
 	server := http.NewServeMux()
 	server.Handle("/greet", makeHttpHandler(svc))
 	server.Handle("/greetings", makeHttpHandler(svc))
