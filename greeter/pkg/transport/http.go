@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"context"
 	"net/http"
 
 	"example.com/microservices/greeter/pkg"
@@ -10,6 +9,7 @@ import (
 
 func NewHttpServer(svc pkg.Greeter) http.Handler {
 	server := http.NewServeMux()
+
 	server.Handle("/greet", makeHttpHandler(svc))
 	server.Handle("/greetings", makeHttpHandler(svc))
 
@@ -19,11 +19,7 @@ func NewHttpServer(svc pkg.Greeter) http.Handler {
 func makeHttpHandler(greeter pkg.Greeter) *kithttp.Server {
 	return kithttp.NewServer(
 		pkg.MakeGreetEndpoint(greeter),
-		decodeRequest,
+		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
 	)
-}
-
-func decodeRequest(ctx context.Context, req *http.Request) (any, error) {
-	return req.URL.Query().Get("name"), nil
 }

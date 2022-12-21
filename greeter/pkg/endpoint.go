@@ -8,6 +8,13 @@ import (
 
 func MakeGreetEndpoint(greeter Greeter) endpoint.Endpoint {
 	return func(ctx context.Context, name any) (any, error) {
-		return greeter.Greet(name.(string)), nil
+		authEndpoint := getAuthenticatedUser(":5454")
+		user, err := authEndpoint(ctx, nil)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return greeter.Greet(user.(string)), nil
 	}
 }

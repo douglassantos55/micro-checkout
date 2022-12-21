@@ -19,18 +19,19 @@ type proxyingmw struct {
 	auth endpoint.Endpoint
 }
 
-func (m *proxyingmw) Greet(name string) map[string]string {
+func (m *proxyingmw) Greet(name string) string {
 	res, _ := m.auth(m.ctx, nil)
 	return m.next.Greet(res.(string))
 }
 
 func ProxyingMiddleware(ctx context.Context, addr string) ServiceMiddleware {
 	return func(g Greeter) Greeter {
-		return &proxyingmw{g, ctx, makeProxy(addr)}
+		return &proxyingmw{g, ctx, getAuthenticatedUser(addr)}
 	}
 }
 
-func makeProxy(addr string) endpoint.Endpoint {
+// Calls auth service on `addr` and returns its response
+func getAuthenticatedUser(addr string) endpoint.Endpoint {
 	if !strings.HasPrefix(addr, "http") {
 		addr = "http://" + addr
 	}
@@ -46,11 +47,12 @@ func makeProxy(addr string) endpoint.Endpoint {
 		"GET",
 		url,
 		kithttp.EncodeJSONRequest,
-		decodeResponse,
+		getAuthName,
 	).Endpoint()
 }
 
-func decodeResponse(ctx context.Context, r *http.Response) (any, error) {
+// Parses response from auth service
+func getAuthName(ctx context.Context, r *http.Response) (any, error) {
 	var name string
 	if err := json.NewDecoder(r.Body).Decode(&name); err != nil {
 		return nil, err
