@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  greeter:
+    image: golang:1.19
+    working_dir: /app
+    command: ["go", "run", "cmd/main.go"]
+    volumes:
+      - ./greeter:/app
+    ports:
+      - "5353:80"
+    depends_on:
+      - auth
+
+  auth:
+    image: golang:1.19
+    working_dir: /app
+    command: ["go", "run", "cmd/main.go"]
+    volumes:
+      - ./auth:/app
+    expose:
+      - "80"
+    ports:
+      - "5454:80"
+
+

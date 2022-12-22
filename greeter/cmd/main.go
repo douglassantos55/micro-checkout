@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":5353", "address to bind")
+	addr := flag.String("addr", ":80", "address to bind")
 	flag.Parse()
 
 	svc := pkg.NewGreeter()
