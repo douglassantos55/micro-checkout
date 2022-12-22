@@ -26,9 +26,11 @@ kind: Service
 metadata:
   name: auth-service
 spec:
+  type: NodePort
   selector:
     app: auth
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+      nodePort: 30100

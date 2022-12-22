@@ -11,6 +11,9 @@ func main() {
 	addr := flag.String("addr", ":80", "address to bind to")
 	flag.Parse()
 
-	server := pkg.NewHttpServer(pkg.NewAuth())
+	encoder := pkg.NewJWTEncoder()
+	svc := pkg.NewAuth(encoder)
+	server := pkg.NewHttpServer(svc)
+
 	http.ListenAndServe(*addr, server)
 }
