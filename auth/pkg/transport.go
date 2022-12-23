@@ -45,5 +45,15 @@ func makeVerifyHandler() *kithttp.Server {
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
 		kithttp.ServerBefore(kitjwt.HTTPToContext()),
+		kithttp.ServerErrorEncoder(errorEncoder),
 	)
+}
+
+func errorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
+
+	w.Header().Set("content-type", "application/json; charset=utf-8")
+	body, err := json.Marshal(map[string]any{"err": err.Error()})
+
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write(body)
 }

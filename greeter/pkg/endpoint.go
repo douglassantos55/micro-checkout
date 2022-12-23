@@ -3,25 +3,17 @@ package pkg
 import (
 	"context"
 	"errors"
-	"os"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 )
 
 func MakeGreetEndpoint(greeter Greeter) endpoint.Endpoint {
-	return func(ctx context.Context, name any) (any, error) {
-		authServiceAddr, ok := os.LookupEnv("AUTH_SERVICE_ADDR")
+	return func(ctx context.Context, r any) (any, error) {
+		name, ok := r.(string)
 		if !ok {
-			return nil, errors.New("AUTH_SERVICE_ADDR not found")
+			return nil, errors.New(fmt.Sprintf("could not convert data to string: %v", r))
 		}
-
-		authEndpoint := getAuthenticatedUser(authServiceAddr)
-		user, err := authEndpoint(ctx, nil)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return greeter.Greet(user.(string)), nil
+		return greeter.Greet(name)
 	}
 }
