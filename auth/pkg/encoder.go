@@ -2,6 +2,10 @@ package pkg
 
 import "github.com/golang-jwt/jwt/v4"
 
+type Encoder interface {
+	Encode(secret []byte, data map[string]any) (string, error)
+}
+
 type JWTEncoder struct{}
 
 func NewJWTEncoder() *JWTEncoder {

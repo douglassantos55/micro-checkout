@@ -7,23 +7,31 @@ import (
 	"net/http"
 
 	kitjwt "github.com/go-kit/kit/auth/jwt"
+	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/go-kit/log"
 )
 
-func NewHttpServer(auth Auth) http.Handler {
+func NewHttpServer(auth Auth, logger log.Logger) http.Handler {
 	server := http.NewServeMux()
 
-	server.Handle("/verify", makeVerifyHandler())
-	server.Handle("/login", makeAuthenticateHandler(auth))
+	opts := []kithttp.ServerOption{
+		kithttp.ServerErrorEncoder(errorEncoder),
+		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
+	}
+
+	server.Handle("/verify", makeVerifyHandler(opts))
+	server.Handle("/login", makeAuthenticateHandler(auth, opts))
 
 	return server
 }
 
-func makeAuthenticateHandler(auth Auth) *kithttp.Server {
+func makeAuthenticateHandler(auth Auth, opts []kithttp.ServerOption) *kithttp.Server {
 	return kithttp.NewServer(
 		makeAuthEndpoint(auth),
 		decodeCredentialsRequest,
 		kithttp.EncodeJSONResponse,
+		opts...,
 	)
 }
 
@@ -39,21 +47,24 @@ func decodeCredentialsRequest(ctx context.Context, r *http.Request) (any, error)
 	return credentials, nil
 }
 
-func makeVerifyHandler() *kithttp.Server {
+func makeVerifyHandler(opts []kithttp.ServerOption) *kithttp.Server {
 	return kithttp.NewServer(
 		JWTMiddleware()(makeVerifyEndpoint()),
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
-		kithttp.ServerBefore(kitjwt.HTTPToContext()),
-		kithttp.ServerErrorEncoder(errorEncoder),
+		append(opts, kithttp.ServerBefore(kitjwt.HTTPToContext()))...,
 	)
 }
 
 func errorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
-
 	w.Header().Set("content-type", "application/json; charset=utf-8")
-	body, err := json.Marshal(map[string]any{"err": err.Error()})
 
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write(body)
+	switch err {
+	case ErrInvalidCredentials:
+		w.WriteHeader(http.StatusBadRequest)
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"err": err.Error()})
 }

@@ -1,16 +1,9 @@
 package pkg
 
-import (
-	"errors"
-	"time"
-)
+import "time"
 
 type Auth interface {
 	Authenticate(Credentials) (string, error)
-}
-
-type Encoder interface {
-	Encode(secret []byte, data map[string]any) (string, error)
 }
 
 type auth struct {
@@ -23,7 +16,7 @@ func NewAuth(encoder Encoder) Auth {
 
 func (a *auth) Authenticate(credentials Credentials) (string, error) {
 	if credentials.Username != "admin" || credentials.Password != "admin" {
-		return "", errors.New("invalid credentials")
+		return "", ErrInvalidCredentials
 	}
 
 	claims := map[string]any{
