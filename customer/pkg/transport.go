@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/julienschmidt/httprouter"
@@ -42,7 +43,12 @@ func decodeGetCustomerRequest(ctx context.Context, r *http.Request) (any, error)
 }
 
 func decodeListCustomersRequest(ctx context.Context, r *http.Request) (any, error) {
-	return r.URL.Query(), nil
+	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 0)
+	if err != nil {
+		page = 1
+	}
+	filters := Filters{Page: int(page)}
+	return filters, nil
 }
 
 func decodeCustomerRequest(ctx context.Context, r *http.Request) (any, error) {

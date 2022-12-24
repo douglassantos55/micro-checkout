@@ -23,7 +23,11 @@ func makeGetCustomerEndpoint(svc Service) endpoint.Endpoint {
 
 func makeListCustomersEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, r any) (any, error) {
-		return svc.ListCustomers(make(Filters))
+		filters, ok := r.(Filters)
+		if !ok {
+			return nil, ErrInvalidFilters
+		}
+		return svc.ListCustomers(filters)
 	}
 }
 
