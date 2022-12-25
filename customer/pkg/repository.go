@@ -1,6 +1,9 @@
 package pkg
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type QueryResult[T any] struct {
 	Items []T `json:"items"`
@@ -24,8 +27,17 @@ type inMemoryRepository struct {
 }
 
 func NewInMemoryRepository() Repository {
+	customers := make(map[string]*Customer, 0)
+	for i := 0; i < 100; i++ {
+		id := "c_" + fmt.Sprintf("%d", i)
+		customers[id] = &Customer{
+			ID:    id,
+			Name:  "customer " + id,
+			Email: "customer" + id + "@email.com",
+		}
+	}
 	return &inMemoryRepository{
-		customers: make(map[string]*Customer),
+		customers: customers,
 	}
 }
 
