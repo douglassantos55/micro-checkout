@@ -28,11 +28,7 @@ func NewInMemoryRepository() Repository {
 }
 
 func (r *inMemoryRepository) GetCustomer(id string) (*Customer, error) {
-	customer, found := r.customers[id]
-	if !found {
-		return nil, makeError(404, "customer not found")
-	}
-	return customer, nil
+	return r.customers[id], nil
 }
 
 func (r *inMemoryRepository) ListCustomers(filters Filters) (QueryResult[*Customer], error) {

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	repo := pkg.NewInMemoryRepository()
-	svc := pkg.NewService(repo)
+	svc := pkg.NewService(repo, pkg.NewValidator())
 
 	server := pkg.MakeHTTPServer(svc)
 	http.ListenAndServe(":80", server)

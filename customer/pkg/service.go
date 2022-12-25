@@ -1,9 +1,9 @@
 package pkg
 
 type Customer struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    string `json:"id" validate:"required"`
+	Name  string `json:"name" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 type Filters struct {
@@ -17,15 +17,23 @@ type Service interface {
 }
 
 type customerservice struct {
+	validator  Validator
 	repository Repository
 }
 
-func NewService(repo Repository) Service {
-	return &customerservice{repo}
+func NewService(repo Repository, validator Validator) Service {
+	return &customerservice{
+		repository: repo,
+		validator:  validator,
+	}
 }
 
 func (s *customerservice) GetCustomer(id string) (*Customer, error) {
-	return s.repository.GetCustomer(id)
+	customer, err := s.repository.GetCustomer(id)
+	if customer == nil {
+		return nil, makeError(404, "customer not found")
+	}
+	return customer, err
 }
 
 func (s *customerservice) ListCustomers(filters Filters) (QueryResult[*Customer], error) {
@@ -33,5 +41,8 @@ func (s *customerservice) ListCustomers(filters Filters) (QueryResult[*Customer]
 }
 
 func (s *customerservice) CreateCustomer(data Customer) (*Customer, error) {
+	if err := s.validator.Validate(data); err != nil {
+		return nil, err
+	}
 	return s.repository.CreateCustomer(data)
 }
