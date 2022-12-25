@@ -14,6 +14,7 @@ const PAGINATION_SIZE = 20
 type Repository interface {
 	GetCustomer(id string) (*Customer, error)
 	CreateCustomer(data Customer) (*Customer, error)
+	UpdateCustomer(id string, data Customer) (*Customer, error)
 	ListCustomers(filters Filters) (QueryResult[*Customer], error)
 }
 
@@ -58,4 +59,13 @@ func (r *inMemoryRepository) ListCustomers(filters Filters) (QueryResult[*Custom
 func (r *inMemoryRepository) CreateCustomer(data Customer) (*Customer, error) {
 	r.customers[data.ID] = &data
 	return &data, nil
+}
+
+func (r *inMemoryRepository) UpdateCustomer(id string, data Customer) (*Customer, error) {
+	r.customers[id] = &Customer{
+		ID:    id,
+		Name:  data.Name,
+		Email: data.Email,
+	}
+	return r.customers[id], nil
 }

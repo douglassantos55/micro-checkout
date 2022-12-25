@@ -40,6 +40,9 @@ func NewValidator() Validator {
 
 func (v *validate) Validate(data any) error {
 	err := v.validator.Struct(data)
+	if err == nil {
+		return err
+	}
 	return makeValidationError(err.(validator.ValidationErrors))
 }
 

@@ -40,3 +40,21 @@ func makeCreateCustomerEndpoint(svc Service) endpoint.Endpoint {
 		return svc.CreateCustomer(data)
 	}
 }
+
+func makeUpdateCustomerEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, r any) (any, error) {
+		data, ok := r.(UpdateRequest)
+		if !ok {
+			return nil, ErrInvalidData
+		}
+		if data.ID == "" {
+			return nil, ErrInvalidCustomerID
+		}
+		return svc.UpdateCustomer(data.ID, data.Customer)
+	}
+}
+
+type UpdateRequest struct {
+	ID       string
+	Customer Customer
+}

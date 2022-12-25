@@ -34,6 +34,13 @@ func MakeHTTPServer(svc Service) http.Handler {
 	)
 	router.Handler("POST", "/", createCustomerHandler)
 
+	updateCustomerHandler := kithttp.NewServer(
+		makeUpdateCustomerEndpoint(svc),
+		decodeUpdateRequest,
+		kithttp.EncodeJSONResponse,
+	)
+	router.Handler("PUT", "/:id", updateCustomerHandler)
+
 	return router
 }
 
@@ -57,4 +64,15 @@ func decodeCustomerRequest(ctx context.Context, r *http.Request) (any, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func decodeUpdateRequest(ctx context.Context, r *http.Request) (any, error) {
+	var data Customer
+	params := httprouter.ParamsFromContext(r.Context())
+	customerId := params.ByName("id")
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	return UpdateRequest{customerId, data}, nil
 }

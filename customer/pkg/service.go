@@ -13,6 +13,7 @@ type Filters struct {
 type Service interface {
 	GetCustomer(id string) (*Customer, error)
 	CreateCustomer(data Customer) (*Customer, error)
+	UpdateCustomer(id string, data Customer) (*Customer, error)
 	ListCustomers(filters Filters) (QueryResult[*Customer], error)
 }
 
@@ -45,4 +46,18 @@ func (s *customerservice) CreateCustomer(data Customer) (*Customer, error) {
 		return nil, err
 	}
 	return s.repository.CreateCustomer(data)
+}
+
+func (s *customerservice) UpdateCustomer(id string, data Customer) (*Customer, error) {
+	customer, err := s.repository.GetCustomer(id)
+	if err != nil {
+		return nil, err
+	}
+	if customer == nil {
+		return nil, makeError(404, "customer not found")
+	}
+	if err := s.validator.Validate(data); err != nil {
+		return nil, err
+	}
+	return s.repository.UpdateCustomer(id, data)
 }
