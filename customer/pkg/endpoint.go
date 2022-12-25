@@ -54,6 +54,16 @@ func makeUpdateCustomerEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
+func makeDeleteCustomerEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, r any) (any, error) {
+		id, ok := r.(string)
+		if !ok {
+			return nil, ErrInvalidCustomerID
+		}
+		return nil, svc.DeleteCustomer(id)
+	}
+}
+
 type UpdateRequest struct {
 	ID       string
 	Customer Customer

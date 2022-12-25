@@ -41,6 +41,13 @@ func MakeHTTPServer(svc Service) http.Handler {
 	)
 	router.Handler("PUT", "/:id", updateCustomerHandler)
 
+	deleteCustomerHandler := kithttp.NewServer(
+		makeDeleteCustomerEndpoint(svc),
+		decodeGetCustomerRequest,
+		kithttp.EncodeJSONResponse,
+	)
+	router.Handler("DELETE", "/:id", deleteCustomerHandler)
+
 	return router
 }
 

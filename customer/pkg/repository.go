@@ -15,6 +15,7 @@ type Repository interface {
 	GetCustomer(id string) (*Customer, error)
 	CreateCustomer(data Customer) (*Customer, error)
 	UpdateCustomer(id string, data Customer) (*Customer, error)
+	DeleteCustomer(id string) error
 	ListCustomers(filters Filters) (QueryResult[*Customer], error)
 }
 
@@ -68,4 +69,9 @@ func (r *inMemoryRepository) UpdateCustomer(id string, data Customer) (*Customer
 		Email: data.Email,
 	}
 	return r.customers[id], nil
+}
+
+func (r *inMemoryRepository) DeleteCustomer(id string) error {
+	delete(r.customers, id)
+	return nil
 }

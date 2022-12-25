@@ -12,9 +12,10 @@ type Filters struct {
 
 type Service interface {
 	GetCustomer(id string) (*Customer, error)
+	ListCustomers(filters Filters) (QueryResult[*Customer], error)
 	CreateCustomer(data Customer) (*Customer, error)
 	UpdateCustomer(id string, data Customer) (*Customer, error)
-	ListCustomers(filters Filters) (QueryResult[*Customer], error)
+	DeleteCustomer(id string) error
 }
 
 type customerservice struct {
@@ -60,4 +61,15 @@ func (s *customerservice) UpdateCustomer(id string, data Customer) (*Customer, e
 		return nil, err
 	}
 	return s.repository.UpdateCustomer(id, data)
+}
+
+func (s *customerservice) DeleteCustomer(id string) error {
+	customer, err := s.repository.GetCustomer(id)
+	if err != nil {
+		return err
+	}
+	if customer == nil {
+		return makeError(404, "customer not found")
+	}
+	return s.repository.DeleteCustomer(id)
 }
