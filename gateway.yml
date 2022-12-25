@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  annotations:
+    konghq.com/strip-path: 'true'
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /customers
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: customer-service
+            port:
+              number: 80
+      - path: /auth
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 80
+      - path: /greet
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: greeter-service
+            port:
+              number: 80
