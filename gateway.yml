@@ -37,3 +37,10 @@ spec:
             name: product-service
             port:
               number: 80
+      - path: /payments
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: payment-service
+            port:
+              number: 80
