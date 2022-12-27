@@ -2,14 +2,15 @@ package pkg
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
-	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/go-kit/log"
 	"github.com/julienschmidt/httprouter"
 )
 
-func MakeHTTPHandler(svc Service) http.Handler {
+func MakeHTTPHandler(svc Service, logger log.Logger) http.Handler {
 	server := httprouter.New()
 
 	listHandler := kithttp.NewServer(
@@ -19,17 +20,20 @@ func MakeHTTPHandler(svc Service) http.Handler {
 	)
 	server.Handler("GET", "/", listHandler)
 
+	reduceStockHandler := kithttp.NewServer(
+		loggingMiddleware(logger)(makeReduceStockEndpoint(svc)),
+		decodeReduceStockRequest,
+		kithttp.EncodeJSONResponse,
+	)
+	server.Handler("POST", "/reduce-stock", reduceStockHandler)
+
 	return server
 }
 
-func MakeGRPCServer(svc Service) kitgrpc.Handler {
-	return kitgrpc.NewServer(
-		makeReduceStockEndpoint(svc),
-		decodeReduceStockRequest,
-		nil,
-	)
-}
-
-func decodeReduceStockRequest(ctx context.Context, r any) (any, error) {
-	return r.(ReduceStockRequest), nil
+func decodeReduceStockRequest(ctx context.Context, r *http.Request) (any, error) {
+	var request ReduceStockRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
 }
