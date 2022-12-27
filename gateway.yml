@@ -44,3 +44,10 @@ spec:
             name: payment-service
             port:
               number: 80
+      - path: /checkout
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: checkout-service
+            port:
+              number: 80
