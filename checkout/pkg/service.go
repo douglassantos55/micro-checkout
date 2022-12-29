@@ -1,6 +1,9 @@
 package pkg
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type Order struct {
 	ID              string       `json:"id,omitempty"`
@@ -15,24 +18,25 @@ type OrderItem struct {
 }
 
 type Service interface {
-	PlaceOrder(order Order) (*Order, error)
+	PlaceOrder(context.Context, Order) (*Order, error)
 	GetOrders() ([]*Order, error)
 }
 
 type service struct {
 	repository Repository
 	validator  Validator
+	broker     MessageBroker
 }
 
-func NewService(repository Repository, validator Validator) Service {
-	return &service{repository, validator}
+func NewService(repository Repository, validator Validator, broker MessageBroker) Service {
+	return &service{repository, validator, broker}
 }
 
 func (s *service) GetOrders() ([]*Order, error) {
 	return s.repository.GetOrders()
 }
 
-func (s *service) PlaceOrder(order Order) (*Order, error) {
+func (s *service) PlaceOrder(ctx context.Context, order Order) (*Order, error) {
 	if err := s.validator.Validate(order); err != nil {
 		return nil, err
 	}
@@ -40,6 +44,10 @@ func (s *service) PlaceOrder(order Order) (*Order, error) {
 	savedOrder, err := s.repository.SaveOrder(order)
 	if err != nil {
 		return nil, fmt.Errorf("could not place order, please try again")
+	}
+
+	if err := s.broker.Broadcast(ctx, "order-placed", savedOrder); err != nil {
+		return nil, err
 	}
 
 	return savedOrder, nil

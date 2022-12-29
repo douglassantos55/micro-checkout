@@ -12,9 +12,15 @@ func main() {
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
+	broker, err := pkg.NewRabbitMQBroker("guest", "guest", "messaging-service")
+	if err != nil {
+		panic(err)
+	}
+
 	svc := pkg.NewService(
 		pkg.NewMemoryRepository(),
 		pkg.NewValidator(),
+		broker,
 	)
 
 	svc = pkg.LoggingMiddleware(logger, svc)

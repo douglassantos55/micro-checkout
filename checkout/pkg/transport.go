@@ -15,7 +15,7 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	server := httprouter.New()
 
 	placeOrderHandler := kithttp.NewServer(
-		processPaymentMiddleware(logger)(reduceStockMiddleware(logger)(makePlaceOrderEndpoint(svc))),
+		reduceStockMiddleware(logger)(makePlaceOrderEndpoint(svc)),
 		decodePlaceOrderRequest,
 		kithttp.EncodeJSONResponse,
 	)

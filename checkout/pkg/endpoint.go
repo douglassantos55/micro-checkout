@@ -25,7 +25,7 @@ func makePlaceOrderEndpoint(svc Service) endpoint.Endpoint {
 		if !ok {
 			return nil, fmt.Errorf("could not convert data into order: %t", r)
 		}
-		return svc.PlaceOrder(order)
+		return svc.PlaceOrder(ctx, order)
 	}
 }
 

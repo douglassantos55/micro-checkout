@@ -30,7 +30,7 @@ func (m *loggingmw) GetOrders() (orders []*Order, err error) {
 	return m.next.GetOrders()
 }
 
-func (m *loggingmw) PlaceOrder(order Order) (*Order, error) {
+func (m *loggingmw) PlaceOrder(ctx context.Context, order Order) (*Order, error) {
 	defer func(timestamp time.Time) {
 		m.logger.Log(
 			"method", "PlaceOrder",
@@ -39,7 +39,7 @@ func (m *loggingmw) PlaceOrder(order Order) (*Order, error) {
 		)
 	}(time.Now())
 
-	return m.next.PlaceOrder(order)
+	return m.next.PlaceOrder(ctx, order)
 }
 
 func reduceStockMiddleware(logger log.Logger) endpoint.Middleware {
