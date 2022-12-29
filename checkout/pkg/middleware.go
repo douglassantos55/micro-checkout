@@ -60,3 +60,26 @@ func reduceStockMiddleware(logger log.Logger) endpoint.Middleware {
 		}
 	}
 }
+
+func processPaymentMiddleware(logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, r any) (invoice any, err error) {
+			defer logger.Log("msg", "payment processed", "invoice", invoice, "err", err)
+
+			res, err := next(ctx, r)
+			if err != nil {
+				return nil, err
+			}
+
+			order := res.(*Order)
+			logger.Log("processing payment", order)
+
+			processPayment := makeProcessPaymentEndpoint()
+			if _, err := processPayment(ctx, order); err != nil {
+				return nil, err
+			}
+
+			return res, err
+		}
+	}
+}

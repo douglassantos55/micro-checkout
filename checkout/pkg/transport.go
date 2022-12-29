@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/go-kit/log"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -14,7 +15,7 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	server := httprouter.New()
 
 	placeOrderHandler := kithttp.NewServer(
-		reduceStockMiddleware()(makePlaceOrderEndpoint(svc)),
+		processPaymentMiddleware(logger)(reduceStockMiddleware(logger)(makePlaceOrderEndpoint(svc))),
 		decodePlaceOrderRequest,
 		kithttp.EncodeJSONResponse,
 	)
