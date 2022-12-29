@@ -59,18 +59,19 @@ func makeProcessPaymentEndpoint() endpoint.Endpoint {
 		panic(err)
 	}
 
-	queue, err := channel.QueueDeclare("orders", false, false, false, false, nil)
+	// publisher is interested in a reply queue, not subscriber queue. The
+	// subscriber queue is specified using the publish key
+	replyQueue, err := channel.QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	return kitamqp.NewPublisher(
 		channel,
-		&queue,
+		&replyQueue,
 		encodeProcessPaymentRequest,
 		decodeProcessPaymentResponse,
-		kitamqp.PublisherBefore(setPublishKey(queue.Name)),
-		kitamqp.PublisherDeliverer(kitamqp.SendAndForgetDeliverer),
+		kitamqp.PublisherBefore(setPublishKey("orders")),
 	).Endpoint()
 }
 
@@ -95,5 +96,13 @@ func encodeProcessPaymentRequest(ctx context.Context, p *amqp.Publishing, r any)
 }
 
 func decodeProcessPaymentResponse(ctx context.Context, d *amqp.Delivery) (any, error) {
-	return nil, nil
+	var invoice struct {
+		ID     string  `json:"id"`
+		Total  float64 `json:"total"`
+		Status string  `json:"status"`
+	}
+	if err := json.Unmarshal(d.Body, &invoice); err != nil {
+		return nil, err
+	}
+	return invoice, nil
 }

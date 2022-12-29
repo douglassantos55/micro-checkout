@@ -48,16 +48,16 @@ func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 		panic(err)
 	}
 
-	msgs, err := channel.Consume(q.Name, "", true, false, false, false, nil)
+	msgs, err := channel.Consume(q.Name, "", false, false, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
 
 	var forever chan struct{}
-	handler := subscriber.ServeDelivery(channel)
 	go func() {
 		for d := range msgs {
 			logger.Log("msg received", string(d.Body))
+			handler := subscriber.ServeDelivery(channel)
 			handler(&d)
 		}
 	}()

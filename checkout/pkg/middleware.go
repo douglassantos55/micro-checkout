@@ -35,7 +35,6 @@ func (m *loggingmw) PlaceOrder(order Order) (*Order, error) {
 		m.logger.Log(
 			"method", "PlaceOrder",
 			"order", order,
-			"order", order,
 			"took", time.Since(timestamp),
 		)
 	}(time.Now())
@@ -88,11 +87,7 @@ func processPaymentMiddleware(logger log.Logger) endpoint.Middleware {
 			logger.Log("processing payment", order)
 
 			processPayment := makeProcessPaymentEndpoint()
-			if _, err := processPayment(ctx, order); err != nil {
-				return nil, err
-			}
-
-			return res, err
+			return processPayment(ctx, order)
 		}
 	}
 }
