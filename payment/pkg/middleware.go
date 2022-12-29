@@ -18,6 +18,20 @@ func LoggingMiddleware(logger log.Logger, svc Service) Service {
 	return &loggingmw{logger, svc}
 }
 
+func (m *loggingmw) ProcessPayment(order Order) (invoice *Invoice, err error) {
+	defer func(timestamp time.Time) {
+		m.logger.Log(
+			"method", "ProcessPayment",
+			"order", order,
+			"invoice", invoice,
+			"error", err,
+			"took", time.Since(timestamp),
+		)
+	}(time.Now())
+
+	return m.next.ProcessPayment(order)
+}
+
 func (m *loggingmw) GetPaymentMethods() (methods []*PaymentMethod, err error) {
 	defer func(timestamp time.Time) {
 		m.logger.Log(

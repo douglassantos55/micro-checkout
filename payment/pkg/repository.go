@@ -1,10 +1,14 @@
 package pkg
 
+import "fmt"
+
 type Repository interface {
+	SaveInvoice(*Invoice) error
 	GetPaymentMethods() ([]*PaymentMethod, error)
 }
 
 type memoryRepository struct {
+	invoices       map[string]*Invoice
 	paymentMethods map[string]*PaymentMethod
 }
 
@@ -14,7 +18,10 @@ func NewMemoryRepository() Repository {
 		"cash":    {ID: "cash", Name: "Cash"},
 		"deposit": {ID: "deposit", Name: "Bank deposit"},
 	}
-	return &memoryRepository{methods}
+	return &memoryRepository{
+		invoices:       make(map[string]*Invoice),
+		paymentMethods: methods,
+	}
 }
 
 func (r *memoryRepository) GetPaymentMethods() ([]*PaymentMethod, error) {
@@ -23,4 +30,11 @@ func (r *memoryRepository) GetPaymentMethods() ([]*PaymentMethod, error) {
 		methods = append(methods, method)
 	}
 	return methods, nil
+}
+
+func (r *memoryRepository) SaveInvoice(invoice *Invoice) error {
+	id := fmt.Sprintf("invoice_%d", len(r.invoices)+1)
+	invoice.ID = id
+	r.invoices[id] = invoice
+	return nil
 }
