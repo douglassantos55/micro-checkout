@@ -25,10 +25,10 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	return router
 }
 
-func MakeAMQPSubscriber(svc Service) {
+func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 	subscriber := kitamqp.NewSubscriber(
 		makeProcessPaymentEndpoint(svc),
-		decodeProcessPaymentRequest,
+		decodeProcessPaymentRequest(logger),
 		kitamqp.EncodeJSONResponse,
 	)
 
@@ -57,22 +57,25 @@ func MakeAMQPSubscriber(svc Service) {
 	handler := subscriber.ServeDelivery(channel)
 	go func() {
 		for d := range msgs {
-			print("handling message\n")
+			logger.Log("msg received", string(d.Body))
 			handler(&d)
 		}
 	}()
 
-	print("waiting for messages...\n")
+	logger.Log("waiting for messages")
 	<-forever
 }
 
-func decodeProcessPaymentRequest(ctx context.Context, r *amqp.Delivery) (any, error) {
-	print("decode request\n")
-	var order Order
-	if err := json.Unmarshal(r.Body, &order); err != nil {
-		print("could not decode request\n")
-		return nil, err
+func decodeProcessPaymentRequest(logger log.Logger) kitamqp.DecodeRequestFunc {
+	return func(ctx context.Context, r *amqp.Delivery) (any, error) {
+		var order Order
+		logger.Log("request", string(r.Body))
+
+		if err := json.Unmarshal(r.Body, &order); err != nil {
+			return nil, err
+		}
+
+		logger.Log("parsed", order)
+		return order, nil
 	}
-	print("decoded request\n")
-	return order, nil
 }

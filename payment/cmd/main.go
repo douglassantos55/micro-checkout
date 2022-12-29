@@ -18,7 +18,7 @@ func main() {
 	svc := pkg.NewService(repo)
 	svc = pkg.LoggingMiddleware(logger, svc)
 
-	go pkg.MakeAMQPSubscriber(svc)
+	go pkg.MakeAMQPSubscriber(svc, log.With(logger, "caller", log.DefaultCaller))
 
 	server := pkg.MakeHTTPServer(svc, logger)
 	http.ListenAndServe(":80", server)
