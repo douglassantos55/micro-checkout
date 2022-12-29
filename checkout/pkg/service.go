@@ -3,6 +3,7 @@ package pkg
 import "fmt"
 
 type Order struct {
+	ID              string       `json:"id,omitempty"`
 	CustomerID      string       `json:"customer_id" validate:"required"`
 	Items           []*OrderItem `json:"items" validate:"required,dive"`
 	PaymentMethodID string       `json:"payment_method_id" validate:"required"`
@@ -15,6 +16,7 @@ type OrderItem struct {
 
 type Service interface {
 	PlaceOrder(order Order) (*Order, error)
+	GetOrders() ([]*Order, error)
 }
 
 type service struct {
@@ -24,6 +26,10 @@ type service struct {
 
 func NewService(repository Repository, validator Validator) Service {
 	return &service{repository, validator}
+}
+
+func (s *service) GetOrders() ([]*Order, error) {
+	return s.repository.GetOrders()
 }
 
 func (s *service) PlaceOrder(order Order) (*Order, error) {

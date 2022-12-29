@@ -13,6 +13,12 @@ import (
 	"github.com/streadway/amqp"
 )
 
+func makeGetOrdersEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, r any) (any, error) {
+		return svc.GetOrders()
+	}
+}
+
 func makePlaceOrderEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, r any) (any, error) {
 		order, ok := r.(Order)

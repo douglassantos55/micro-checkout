@@ -17,6 +17,19 @@ func LoggingMiddleware(logger log.Logger, svc Service) Service {
 	return &loggingmw{svc, logger}
 }
 
+func (m *loggingmw) GetOrders() (orders []*Order, err error) {
+	defer func(timestamp time.Time) {
+		m.logger.Log(
+			"method", "GetOrders",
+			"orders", orders,
+			"err", err,
+			"took", time.Since(timestamp),
+		)
+	}(time.Now())
+
+	return m.next.GetOrders()
+}
+
 func (m *loggingmw) PlaceOrder(order Order) (*Order, error) {
 	defer func(timestamp time.Time) {
 		m.logger.Log(

@@ -19,7 +19,14 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 		decodePlaceOrderRequest,
 		kithttp.EncodeJSONResponse,
 	)
-	server.Handler("POST", "/place-order", placeOrderHandler)
+	server.Handler("POST", "/orders", placeOrderHandler)
+
+	getOrdersHandler := kithttp.NewServer(
+		makeGetOrdersEndpoint(svc),
+		kithttp.NopRequestDecoder,
+		kithttp.EncodeJSONResponse,
+	)
+	server.Handler("GET", "/orders", getOrdersHandler)
 
 	return server
 }
