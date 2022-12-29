@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"os"
-	"time"
 
 	"example.com/microservices/checkout/pkg"
 	"github.com/go-kit/kit/log"
@@ -11,7 +10,7 @@ import (
 
 func main() {
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-	logger = log.With(logger, "ts", time.Now())
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	svc := pkg.NewService(
 		pkg.NewMemoryRepository(),

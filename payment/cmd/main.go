@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"os"
-	"time"
 
 	"example.com/microservices/payment/pkg"
 	"github.com/go-kit/kit/log"
@@ -14,12 +13,12 @@ func main() {
 
 	writter := log.NewSyncWriter(os.Stderr)
 	logger := log.NewJSONLogger(writter)
-	logger = log.With(logger, "ts", time.Now())
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	svc := pkg.NewService(repo)
 	svc = pkg.LoggingMiddleware(logger, svc)
 
-    go pkg.MakeAMQPSubscriber(svc)
+	go pkg.MakeAMQPSubscriber(svc)
 
 	server := pkg.MakeHTTPServer(svc, logger)
 	http.ListenAndServe(":80", server)
