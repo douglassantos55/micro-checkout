@@ -10,7 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func MakeHTTPServer(svc Service) http.Handler {
+func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	server := httprouter.New()
 
 	placeOrderHandler := kithttp.NewServer(

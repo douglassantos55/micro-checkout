@@ -30,7 +30,7 @@ func (m *loggingmw) PlaceOrder(order Order) (*Order, error) {
 	return m.next.PlaceOrder(order)
 }
 
-func reduceStockMiddleware() endpoint.Middleware {
+func reduceStockMiddleware(logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, r any) (any, error) {
 			res, err := next(ctx, r)
@@ -46,11 +46,16 @@ func reduceStockMiddleware() endpoint.Middleware {
 					Qty       int    `json:"qty"`
 				}{item.ProductID, item.Qty}
 
+				logger.Log("reducing stock", req)
+
 				if _, err := reduceStock(ctx, req); err != nil {
 					return nil, err
 				}
+
+				logger.Log("stock reduced", req)
 			}
 
+			logger.Log("stock processed, proceeding", order)
 			return order, nil
 		}
 	}

@@ -27,22 +27,14 @@ func NewService(repository Repository, validator Validator) Service {
 }
 
 func (s *service) PlaceOrder(order Order) (*Order, error) {
-	// validate
 	if err := s.validator.Validate(order); err != nil {
 		return nil, err
 	}
 
-	// save order
 	savedOrder, err := s.repository.SaveOrder(order)
 	if err != nil {
 		return nil, fmt.Errorf("could not place order, please try again")
 	}
-
-	// process payment
-	// -- s.messageBroker.dispatch("OrderPlaced")
-
-	// reduce stock
-	// -- communicate with product service
 
 	return savedOrder, nil
 }

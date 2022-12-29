@@ -19,5 +19,5 @@ func main() {
 	)
 
 	svc = pkg.LoggingMiddleware(logger, svc)
-	http.ListenAndServe(":80", pkg.MakeHTTPServer(svc))
+	http.ListenAndServe(":80", pkg.MakeHTTPServer(svc, logger))
 }
