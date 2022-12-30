@@ -23,13 +23,36 @@ func makePlaceOrderEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, r any) (any, error) {
 		order, ok := r.(Order)
 		if !ok {
-			return nil, fmt.Errorf("could not convert data into order: %t", r)
+			return nil, fmt.Errorf("could not convert data into order: %v", r)
 		}
-		return svc.PlaceOrder(ctx, order)
+		return svc.PlaceOrder(ctx, &order)
 	}
 }
 
-func makeReduceStockEndpoint() endpoint.Endpoint {
+func MakeGetProductEndpoint() endpoint.Endpoint {
+	url, err := url.Parse("http://product-service/")
+	if err != nil {
+		panic(err)
+	}
+
+	return kithttp.NewClient(
+		"GET",
+		url,
+		func(ctx context.Context, r *http.Request, i any) error {
+			r.URL.Path += i.(string)
+			return nil
+		},
+		func(ctx context.Context, r *http.Response) (any, error) {
+			var product Product
+			if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
+				return nil, err
+			}
+			return product, nil
+		},
+	).Endpoint()
+}
+
+func MakeReduceStockEndpoint() endpoint.Endpoint {
 	url, err := url.Parse("http://product-service/reduce-stock")
 	if err != nil {
 		panic(err)
@@ -48,7 +71,7 @@ func makeReduceStockEndpoint() endpoint.Endpoint {
 	).Endpoint()
 }
 
-func makeProcessPaymentEndpoint() endpoint.Endpoint {
+func MakeProcessPaymentEndpoint() endpoint.Endpoint {
 	conn, err := amqp.Dial("amqp://guest:guest@messaging-service/")
 	if err != nil {
 		panic(err)

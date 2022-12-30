@@ -11,18 +11,19 @@ import (
 func main() {
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-
-	broker, err := pkg.NewRabbitMQBroker("guest", "guest", "messaging-service")
-	if err != nil {
-		panic(err)
-	}
+	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	svc := pkg.NewService(
 		pkg.NewMemoryRepository(),
 		pkg.NewValidator(),
-		broker,
 	)
 
-	svc = pkg.LoggingMiddleware(logger, svc)
+	svc = pkg.NewProxyingMiddleware(
+		pkg.LoggingMiddleware(logger, svc),
+		pkg.MakeGetProductEndpoint(),
+		pkg.MakeReduceStockEndpoint(),
+		pkg.MakeProcessPaymentEndpoint(),
+	)
+
 	http.ListenAndServe(":80", pkg.MakeHTTPServer(svc, logger))
 }

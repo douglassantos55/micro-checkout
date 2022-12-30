@@ -30,7 +30,7 @@ func (m *loggingmw) GetOrders() (orders []*Order, err error) {
 	return m.next.GetOrders()
 }
 
-func (m *loggingmw) PlaceOrder(ctx context.Context, order Order) (*Order, error) {
+func (m *loggingmw) PlaceOrder(ctx context.Context, order *Order) (*Order, error) {
 	defer func(timestamp time.Time) {
 		m.logger.Log(
 			"method", "PlaceOrder",
@@ -42,52 +42,62 @@ func (m *loggingmw) PlaceOrder(ctx context.Context, order Order) (*Order, error)
 	return m.next.PlaceOrder(ctx, order)
 }
 
-func reduceStockMiddleware(logger log.Logger) endpoint.Middleware {
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, r any) (any, error) {
-			res, err := next(ctx, r)
-			if err != nil {
-				return nil, err
-			}
-
-			order := res.(*Order)
-			reduceStock := makeReduceStockEndpoint()
-			for _, item := range order.Items {
-				req := struct {
-					ProductID string `json:"product_id"`
-					Qty       int    `json:"qty"`
-				}{item.ProductID, item.Qty}
-
-				logger.Log("reducing stock", req)
-
-				if _, err := reduceStock(ctx, req); err != nil {
-					return nil, err
-				}
-
-				logger.Log("stock reduced", req)
-			}
-
-			logger.Log("stock processed, proceeding", order)
-			return order, nil
-		}
-	}
+type proxyingmw struct {
+	next           Service
+	getProduct     endpoint.Endpoint
+	reduceStock    endpoint.Endpoint
+	processPayment endpoint.Endpoint
 }
 
-func processPaymentMiddleware(logger log.Logger) endpoint.Middleware {
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, r any) (invoice any, err error) {
-			defer logger.Log("msg", "payment processed", "invoice", invoice, "err", err)
+func NewProxyingMiddleware(next Service, getProduct, reduceStock, processPayment endpoint.Endpoint) Service {
+	return &proxyingmw{next, getProduct, reduceStock, processPayment}
+}
 
-			res, err := next(ctx, r)
-			if err != nil {
-				return nil, err
-			}
+func (m *proxyingmw) GetOrders() ([]*Order, error) {
+	return m.next.GetOrders()
+}
 
-			order := res.(*Order)
-			logger.Log("processing payment", order)
+func (m *proxyingmw) calculateOrderTotal(ctx context.Context, order *Order) error {
+	for _, item := range order.Items {
+		p, err := m.getProduct(ctx, item.ProductID)
+		if err != nil {
+			return err
+		}
+		product := p.(Product)
+		item.Subtotal = product.Price * float64(item.Qty)
+		order.Total += item.Subtotal
+	}
+	return nil
+}
 
-			processPayment := makeProcessPaymentEndpoint()
-			return processPayment(ctx, order)
+func (m *proxyingmw) reduceProductsStock(ctx context.Context, order *Order) error {
+	for _, item := range order.Items {
+		req := struct {
+			ProductID string `json:"product_id"`
+			Qty       int    `json:"qty"`
+		}{item.ProductID, item.Qty}
+
+		if _, err := m.reduceStock(ctx, req); err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func (m *proxyingmw) PlaceOrder(ctx context.Context, order *Order) (*Order, error) {
+	if err := m.calculateOrderTotal(ctx, order); err != nil {
+		return nil, err
+	}
+
+	saved, err := m.next.PlaceOrder(ctx, order)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.reduceProductsStock(ctx, saved); err != nil {
+		return nil, err
+	}
+
+	m.processPayment(ctx, saved)
+	return saved, nil
 }

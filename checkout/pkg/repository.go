@@ -4,7 +4,7 @@ import "fmt"
 
 type Repository interface {
 	GetOrders() ([]*Order, error)
-	SaveOrder(order Order) (*Order, error)
+	SaveOrder(order *Order) (*Order, error)
 }
 
 type memoryRepository struct {
@@ -25,9 +25,9 @@ func (r *memoryRepository) GetOrders() ([]*Order, error) {
 	return orders, nil
 }
 
-func (r *memoryRepository) SaveOrder(order Order) (*Order, error) {
+func (r *memoryRepository) SaveOrder(order *Order) (*Order, error) {
 	id := fmt.Sprintf("order_%d", len(r.orders)+1)
 	order.ID = id
-	r.orders[id] = &order
-	return &order, nil
+	r.orders[id] = order
+	return order, nil
 }
