@@ -101,3 +101,21 @@ func (m *proxyingmw) PlaceOrder(ctx context.Context, order *Order) (*Order, erro
 	m.processPayment(ctx, saved)
 	return saved, nil
 }
+
+func Logging(name string, logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, r any) (res any, err error) {
+			defer func(start time.Time) {
+				logger.Log(
+					"method", name,
+					"request", r,
+					"res", res,
+					"err", err,
+					"took", time.Since(start),
+				)
+			}(time.Now())
+
+			return next(ctx, r)
+		}
+	}
+}

@@ -20,9 +20,9 @@ func main() {
 
 	svc = pkg.NewProxyingMiddleware(
 		pkg.LoggingMiddleware(logger, svc),
-		pkg.MakeGetProductEndpoint(),
-		pkg.MakeReduceStockEndpoint(),
-		pkg.MakeProcessPaymentEndpoint(),
+		pkg.Logging("GetProduct", logger)(pkg.MakeGetProductEndpoint()),
+		pkg.Logging("ReduceStock", logger)(pkg.MakeReduceStockEndpoint()),
+		pkg.Logging("ProcessPayment", logger)(pkg.MakeProcessPaymentEndpoint()),
 	)
 
 	http.ListenAndServe(":80", pkg.MakeHTTPServer(svc, logger))
