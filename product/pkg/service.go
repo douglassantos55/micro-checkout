@@ -10,6 +10,7 @@ type Product struct {
 }
 
 type Service interface {
+	GetProduct(id string) (*Product, error)
 	ListProducts() ([]*Product, error)
 	ReduceStock(string, int) error
 }
@@ -20,6 +21,10 @@ type service struct {
 
 func NewService(repo Repository) Service {
 	return &service{repo}
+}
+
+func (s *service) GetProduct(id string) (*Product, error) {
+	return s.repository.Get(id)
 }
 
 func (s *service) ListProducts() ([]*Product, error) {

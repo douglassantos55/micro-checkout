@@ -20,6 +20,13 @@ func MakeHTTPHandler(svc Service, logger log.Logger) http.Handler {
 	)
 	server.Handler("GET", "/", listHandler)
 
+	getHandler := kithttp.NewServer(
+		makeGetProductEndpoint(svc),
+		decodeGetProductRequest,
+		kithttp.EncodeJSONResponse,
+	)
+	server.Handler("GET", "/:id", getHandler)
+
 	reduceStockHandler := kithttp.NewServer(
 		loggingMiddleware(logger)(makeReduceStockEndpoint(svc)),
 		decodeReduceStockRequest,
@@ -28,6 +35,11 @@ func MakeHTTPHandler(svc Service, logger log.Logger) http.Handler {
 	server.Handler("POST", "/reduce-stock", reduceStockHandler)
 
 	return server
+}
+
+func decodeGetProductRequest(ctx context.Context, r *http.Request) (any, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	return params.ByName("id"), nil
 }
 
 func decodeReduceStockRequest(ctx context.Context, r *http.Request) (any, error) {
