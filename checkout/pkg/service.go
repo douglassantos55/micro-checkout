@@ -46,9 +46,5 @@ func (s *service) PlaceOrder(ctx context.Context, order Order) (*Order, error) {
 		return nil, fmt.Errorf("could not place order, please try again")
 	}
 
-	if err := s.broker.Broadcast(ctx, "order-placed", savedOrder); err != nil {
-		return nil, err
-	}
-
 	return savedOrder, nil
 }

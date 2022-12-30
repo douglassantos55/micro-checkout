@@ -59,6 +59,18 @@ func makeProcessPaymentEndpoint() endpoint.Endpoint {
 		panic(err)
 	}
 
+	if err := channel.ExchangeDeclare(
+		"order-placed",
+		amqp.ExchangeFanout,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	); err != nil {
+		panic(err)
+	}
+
 	// publisher is interested in a reply queue, not subscriber queue. The
 	// subscriber queue is specified using the publish key
 	replyQueue, err := channel.QueueDeclare("", false, false, true, false, nil)
@@ -71,14 +83,8 @@ func makeProcessPaymentEndpoint() endpoint.Endpoint {
 		&replyQueue,
 		encodeProcessPaymentRequest,
 		decodeProcessPaymentResponse,
-		kitamqp.PublisherBefore(setPublishKey("orders")),
+		kitamqp.PublisherBefore(kitamqp.SetPublishExchange("order-placed")),
 	).Endpoint()
-}
-
-func setPublishKey(key string) kitamqp.RequestFunc {
-	return func(ctx context.Context, p *amqp.Publishing, d *amqp.Delivery) context.Context {
-		return context.WithValue(ctx, kitamqp.ContextKeyPublishKey, key)
-	}
 }
 
 func encodeProcessPaymentRequest(ctx context.Context, p *amqp.Publishing, r any) error {
