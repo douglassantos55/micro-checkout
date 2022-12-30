@@ -18,6 +18,7 @@ type Invoice struct {
 }
 
 type Service interface {
+	GetInvoices() ([]*Invoice, error)
 	ProcessPayment(order Order) (*Invoice, error)
 	GetPaymentMethods() ([]*PaymentMethod, error)
 }
@@ -32,6 +33,10 @@ func NewService(repository Repository) Service {
 
 func (s *service) GetPaymentMethods() ([]*PaymentMethod, error) {
 	return s.repository.GetPaymentMethods()
+}
+
+func (s *service) GetInvoices() ([]*Invoice, error) {
+	return s.repository.GetInvoices()
 }
 
 func (s *service) ProcessPayment(order Order) (*Invoice, error) {

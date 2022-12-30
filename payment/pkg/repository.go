@@ -4,6 +4,7 @@ import "fmt"
 
 type Repository interface {
 	SaveInvoice(*Invoice) error
+	GetInvoices() ([]*Invoice, error)
 	GetPaymentMethods() ([]*PaymentMethod, error)
 }
 
@@ -22,6 +23,14 @@ func NewMemoryRepository() Repository {
 		invoices:       make(map[string]*Invoice),
 		paymentMethods: methods,
 	}
+}
+
+func (r *memoryRepository) GetInvoices() ([]*Invoice, error) {
+	invoices := make([]*Invoice, 0)
+	for _, invoice := range r.invoices {
+		invoices = append(invoices, invoice)
+	}
+	return invoices, nil
 }
 
 func (r *memoryRepository) GetPaymentMethods() ([]*PaymentMethod, error) {

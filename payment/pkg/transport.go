@@ -20,7 +20,14 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
 	)
-	router.Handler("GET", "/", getMethodsHandler)
+	router.Handler("GET", "/methods", getMethodsHandler)
+
+	getInvoicesHandler := kithttp.NewServer(
+		loggingMiddleware(logger)(makeGetInvoicesEndpoint(svc)),
+		kithttp.NopRequestDecoder,
+		kithttp.EncodeJSONResponse,
+	)
+	router.Handler("GET", "/invoices", getInvoicesHandler)
 
 	return router
 }

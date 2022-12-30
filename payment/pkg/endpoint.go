@@ -13,6 +13,12 @@ func makeGetMethodsEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
+func makeGetInvoicesEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, r any) (any, error) {
+		return svc.GetInvoices()
+	}
+}
+
 func makeProcessPaymentEndpoint(svc Service) endpoint.Endpoint {
 	return func(cxt context.Context, r any) (any, error) {
 		order, ok := r.(Order)

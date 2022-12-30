@@ -32,6 +32,19 @@ func (m *loggingmw) ProcessPayment(order Order) (invoice *Invoice, err error) {
 	return m.next.ProcessPayment(order)
 }
 
+func (m *loggingmw) GetInvoices() (invoices []*Invoice, err error) {
+	defer func(timestamp time.Time) {
+		m.logger.Log(
+			"method", "GetInvoices",
+			"invoices", invoices,
+			"error", err,
+			"took", time.Since(timestamp),
+		)
+	}(time.Now())
+
+	return m.next.GetInvoices()
+}
+
 func (m *loggingmw) GetPaymentMethods() (methods []*PaymentMethod, err error) {
 	defer func(timestamp time.Time) {
 		m.logger.Log(
