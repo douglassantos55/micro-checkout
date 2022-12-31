@@ -7,11 +7,32 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	kitamqp "github.com/go-kit/kit/transport/amqp"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/streadway/amqp"
 )
+
+func makeAuthEndpoint() endpoint.Endpoint {
+	url, err := url.Parse("http://auth-service/verify")
+	if err != nil {
+		panic(err)
+	}
+
+	return kithttp.NewClient(
+		"GET",
+		url,
+		kithttp.EncodeJSONRequest,
+		func(ctx context.Context, r *http.Response) (any, error) {
+			if r.StatusCode != 200 {
+				return nil, fmt.Errorf("could not authenticate")
+			}
+			return nil, nil
+		},
+		kithttp.ClientBefore(jwt.ContextToHTTP()),
+	).Endpoint()
+}
 
 func makeGetOrdersEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, r any) (any, error) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-kit/kit/auth/jwt"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-kit/log"
 	"github.com/julienschmidt/httprouter"
@@ -15,16 +16,18 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	server := httprouter.New()
 
 	placeOrderHandler := kithttp.NewServer(
-		makePlaceOrderEndpoint(svc),
+		authMiddleware(makePlaceOrderEndpoint(svc)),
 		decodePlaceOrderRequest,
 		kithttp.EncodeJSONResponse,
+		kithttp.ServerBefore(jwt.HTTPToContext()),
 	)
 	server.Handler("POST", "/orders", placeOrderHandler)
 
 	getOrdersHandler := kithttp.NewServer(
-		makeGetOrdersEndpoint(svc),
+		authMiddleware(makeGetOrdersEndpoint(svc)),
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
+		kithttp.ServerBefore(jwt.HTTPToContext()),
 	)
 	server.Handler("GET", "/orders", getOrdersHandler)
 

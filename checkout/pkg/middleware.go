@@ -8,6 +8,16 @@ import (
 	"github.com/go-kit/log"
 )
 
+func authMiddleware(next endpoint.Endpoint) endpoint.Endpoint {
+	return func(ctx context.Context, r any) (any, error) {
+		verify := makeAuthEndpoint()
+		if _, err := verify(ctx, r); err != nil {
+			return nil, err
+		}
+		return next(ctx, r)
+	}
+}
+
 type loggingmw struct {
 	next   Service
 	logger log.Logger
