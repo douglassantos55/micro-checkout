@@ -16,14 +16,14 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 	router := httprouter.New()
 
 	getMethodsHandler := kithttp.NewServer(
-		loggingMiddleware(logger)(makeGetMethodsEndpoint(svc)),
+		loggingMiddleware("GetMethods", logger)(makeGetMethodsEndpoint(svc)),
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
 	)
 	router.Handler("GET", "/methods", getMethodsHandler)
 
 	getInvoicesHandler := kithttp.NewServer(
-		loggingMiddleware(logger)(makeGetInvoicesEndpoint(svc)),
+		loggingMiddleware("GetInvoices", logger)(makeGetInvoicesEndpoint(svc)),
 		kithttp.NopRequestDecoder,
 		kithttp.EncodeJSONResponse,
 	)
@@ -34,7 +34,7 @@ func MakeHTTPServer(svc Service, logger log.Logger) http.Handler {
 
 func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 	subscriber := kitamqp.NewSubscriber(
-		makeProcessPaymentEndpoint(svc),
+		loggingMiddleware("ProcessPayment", logger)(makeProcessPaymentEndpoint(svc)),
 		decodeProcessPaymentRequest(logger),
 		kitamqp.EncodeJSONResponse,
 	)
@@ -82,6 +82,7 @@ func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 			logger.Log("msg received", string(d.Body))
 			handler := subscriber.ServeDelivery(channel)
 			handler(&d)
+			logger.Log("reply delivered")
 		}
 	}()
 

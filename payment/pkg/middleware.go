@@ -59,10 +59,18 @@ func (m *loggingmw) GetPaymentMethods() (methods []*PaymentMethod, err error) {
 }
 
 // Endpoints middlewares
-func loggingMiddleware(logger log.Logger) endpoint.Middleware {
+func loggingMiddleware(name string, logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, req any) (res any, err error) {
-			defer logger.Log("msg", "endpoint executed", "req", req, "res", res, "err", err)
+			defer func(start time.Time) {
+				logger.Log(
+					"endpoint", name,
+					"req", req,
+					"res", res,
+					"err", err,
+					"took", time.Since(start),
+				)
+			}(time.Now())
 			return next(ctx, req)
 		}
 	}
