@@ -53,7 +53,7 @@ func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 	if err := channel.ExchangeDeclare(
 		"order-placed",
 		amqp.ExchangeFanout,
-		false,
+		true,
 		false,
 		false,
 		false,
@@ -62,7 +62,7 @@ func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 		panic(err)
 	}
 
-	q, err := channel.QueueDeclare("", false, false, true, false, nil)
+	q, err := channel.QueueDeclare("payment-order-placed", true, false, true, false, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +71,7 @@ func MakeAMQPSubscriber(svc Service, logger log.Logger) {
 		panic(err)
 	}
 
-	msgs, err := channel.Consume(q.Name, "", false, false, false, false, nil)
+	msgs, err := channel.Consume(q.Name, "", true, true, false, false, nil)
 	if err != nil {
 		panic(err)
 	}

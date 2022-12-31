@@ -98,7 +98,10 @@ func (m *proxyingmw) PlaceOrder(ctx context.Context, order *Order) (*Order, erro
 		return nil, err
 	}
 
-	m.processPayment(ctx, saved)
+	go func(order *Order) {
+		invoice, err := m.processPayment(context.Background(), saved)
+	}(saved)
+
 	return saved, nil
 }
 

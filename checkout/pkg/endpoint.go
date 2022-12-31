@@ -85,7 +85,7 @@ func MakeProcessPaymentEndpoint() endpoint.Endpoint {
 	if err := channel.ExchangeDeclare(
 		"order-placed",
 		amqp.ExchangeFanout,
-		false,
+		true,
 		false,
 		false,
 		false,
@@ -106,7 +106,10 @@ func MakeProcessPaymentEndpoint() endpoint.Endpoint {
 		&replyQueue,
 		encodeProcessPaymentRequest,
 		decodeProcessPaymentResponse,
-		kitamqp.PublisherBefore(kitamqp.SetPublishExchange("order-placed")),
+		kitamqp.PublisherBefore(
+			kitamqp.SetConsumeAutoAck(true),
+			kitamqp.SetPublishExchange("order-placed"),
+		),
 	).Endpoint()
 }
 

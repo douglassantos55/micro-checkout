@@ -25,7 +25,7 @@ func NewMessageBroker(logger log.Logger, user, pass, url string) {
 	if err := channel.ExchangeDeclare(
 		"order-placed",
 		amqp.ExchangeFanout,
-		false,
+		true,
 		false,
 		false,
 		false,
@@ -34,7 +34,7 @@ func NewMessageBroker(logger log.Logger, user, pass, url string) {
 		panic(err)
 	}
 
-	q, err := channel.QueueDeclare("", false, false, true, false, nil)
+	q, err := channel.QueueDeclare("customer-order-placed", true, false, true, false, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func NewMessageBroker(logger log.Logger, user, pass, url string) {
 		panic(err)
 	}
 
-	msgs, err := channel.Consume(q.Name, "", false, false, false, false, nil)
+	msgs, err := channel.Consume(q.Name, "", false, true, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
